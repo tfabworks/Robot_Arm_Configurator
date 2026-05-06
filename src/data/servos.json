@@ -1,0 +1,27 @@
+{
+  "FT90B": {
+    "id": "FT90B",
+    "name": "FT90B",
+    "manufacturer": "Feetech",
+    "controlType": "positional",
+    "voltage": { "min": 4.8, "max": 6.0, "nominal": 6.0 },
+    "torqueKgcm": 1.5,
+    "stallCurrentA": 0.6,
+    "noLoadCurrentA": 0.1,
+    "speedSecPer60deg": 0.10,
+    "weightG": 9,
+    "dimensions": { "x": 22.6, "y": 12.4, "z": 22.5 },
+    "horn": {
+      "type": "spline",
+      "shaftDiameter": 4.8,
+      "teeth": 21
+    },
+    "mountingHoles": [
+      { "x": -14, "y": 0, "z": 0, "diameter": 2.0 },
+      { "x": 14, "y": 0, "z": 0, "diameter": 2.0 }
+    ],
+    "shaft": { "x": 0, "y": 0, "z": 0 },
+    "operatingRangeDeg": { "lower": -90, "upper": 90 },
+    "notes": "寸法・取付穴位置は実機計測で要再確認（暫定値）"
+  }
+}

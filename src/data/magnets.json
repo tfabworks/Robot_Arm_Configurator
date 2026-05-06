@@ -1,0 +1,32 @@
+{
+  "neodymium-d6x2-n35": {
+    "id": "neodymium-d6x2-n35",
+    "name": "ネオジム磁石 φ6 × 2mm (N35)",
+    "shape": "cylinder",
+    "diameterMm": 6,
+    "thicknessMm": 2,
+    "grade": "N35",
+    "pullForceKg": 0.3,
+    "weightG": 0.4
+  },
+  "neodymium-d8x3-n35": {
+    "id": "neodymium-d8x3-n35",
+    "name": "ネオジム磁石 φ8 × 3mm (N35)",
+    "shape": "cylinder",
+    "diameterMm": 8,
+    "thicknessMm": 3,
+    "grade": "N35",
+    "pullForceKg": 0.6,
+    "weightG": 1.2
+  },
+  "neodymium-d10x3-n35": {
+    "id": "neodymium-d10x3-n35",
+    "name": "ネオジム磁石 φ10 × 3mm (N35)",
+    "shape": "cylinder",
+    "diameterMm": 10,
+    "thicknessMm": 3,
+    "grade": "N35",
+    "pullForceKg": 0.9,
+    "weightG": 1.8
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "version": "1.0",
+  "id": "magnet-arm-2dof",
+  "name": "磁石グリッパー2軸アーム",
+  "description": "FT90B サーボ2個 + ネオジム磁石でクリップを拾う卓上アーム（Phase 1 既定テンプレート）",
+  "rootLink": "base",
+  "units": {
+    "length": "mm",
+    "angle": "deg",
+    "mass": "g"
+  },
+  "axisConvention": {
+    "linkLocal": "X=longitudinal, Y=lateral, Z=vertical",
+    "world": "X=forward, Y=left, Z=up"
+  },
+  "links": [
+    {
+      "id": "base",
+      "shape": "cylinder",
+      "dimensions": { "diameter": 60, "length": 50 },
+      "color": "#888888",
+      "constraints": {
+        "diameter": { "min": 50, "max": 90 },
+        "length": { "min": 40, "max": 70 }
+      },
+      "notes": "底面に滑り止めシート + 重り収納凹みを設計（10円玉数枚で安定化）"
+    },
+    {
+      "id": "upper_arm",
+      "shape": "box",
+      "dimensions": { "length": 70, "width": 18, "thickness": 12 },
+      "color": "#3b82f6",
+      "constraints": {
+        "length": { "min": 50, "max": 100 },
+        "width": { "min": 14, "max": 22 },
+        "thickness": { "min": 10, "max": 15 }
+      }
+    },
+    {
+      "id": "forearm",
+      "shape": "box",
+      "dimensions": { "length": 80, "width": 16, "thickness": 10 },
+      "color": "#10b981",
+      "constraints": {
+        "length": { "min": 60, "max": 110 },
+        "width": { "min": 12, "max": 20 },
+        "thickness": { "min": 8, "max": 14 }
+      },
+      "endEffector": {
+        "type": "magnet",
+        "ref": "magnet-db:neodymium-d8x3-n35",
+        "mountPosition": "tip",
+        "orientation": "down",
+        "fitTolerance": -0.1
+      }
+    }
+  ],
+  "joints": [
+    {
+      "id": "shoulder",
+      "type": "revolute",
+      "parent": "base",
+      "child": "upper_arm",
+      "origin": { "xyz": [0, 0, 50], "rpy": [0, 0, 0] },
+      "axis": [0, 1, 0],
+      "limit": { "lower": -90, "upper": 90 },
+      "home": 0,
+      "servo": "FT90B"
+    },
+    {
+      "id": "elbow",
+      "type": "revolute",
+      "parent": "upper_arm",
+      "child": "forearm",
+      "origin": { "xyz": [70, 0, 0], "rpy": [0, 0, 0] },
+      "axis": [0, 1, 0],
+      "limit": { "lower": -120, "upper": 30 },
+      "home": 0,
+      "servo": "FT90B"
+    }
+  ],
+  "servos": {
+    "FT90B": { "ref": "servo-db:FT90B" }
+  },
+  "magnetOptions": [
+    "magnet-db:neodymium-d6x2-n35",
+    "magnet-db:neodymium-d8x3-n35",
+    "magnet-db:neodymium-d10x3-n35"
+  ],
+  "manufacturing": {
+    "material": "PLA",
+    "wallMinMm": 1.5,
+    "servoHoleClearanceMm": 0.2,
+    "magnetHoleClearanceMm": -0.1
+  }
+}
