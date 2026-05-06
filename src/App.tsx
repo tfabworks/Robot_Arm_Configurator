@@ -1,5 +1,6 @@
 import { ArmViewer } from './components/ArmViewer';
 import { DimensionSliders } from './components/DimensionSliders';
+import { ExportPanel } from './components/ExportPanel';
 import { JointSliders } from './components/JointSliders';
 import { ValidationPanel } from './components/ValidationPanel';
 import { useArmStore } from './store/armStore';
@@ -22,6 +23,7 @@ function App() {
           <JointSliders />
           <DimensionSliders />
           <ValidationPanel />
+          <ExportPanel />
         </aside>
         <div className="viewer-wrap">
           <ArmViewer />
