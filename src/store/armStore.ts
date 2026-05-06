@@ -98,10 +98,11 @@ export const useArmStore = create<ArmState>()(
     }),
     {
       name: 'robot-arm-cad',
-      // Bumped to 2 when shoulder became a continuous Z-axis turret driven by
-      // FS90R. Old persisted templates carry the FT90B revolute shoulder and
-      // would render a broken arm — version mismatch drops them.
-      version: 2,
+      // Bumped to 3 when the shoulder reverted to FT90B revolute (the
+      // FS90R turret experiment was rolled back). Persisted v2 templates
+      // reference an FS90R servo that no longer exists in the DB and would
+      // render broken — version mismatch drops them.
+      version: 3,
       storage: createJSONStorage(() => localStorage),
       // Only the user-editable design state is persisted. Static DBs come
       // from imported JSON every load so updates ship via deploys.

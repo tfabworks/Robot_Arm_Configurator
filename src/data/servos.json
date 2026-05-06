@@ -23,29 +23,5 @@
     "shaft": { "x": 0, "y": 0, "z": 0 },
     "operatingRangeDeg": { "lower": -90, "upper": 90 },
     "notes": "寸法・取付穴位置は実機計測で要再確認（暫定値）"
-  },
-  "FS90R": {
-    "id": "FS90R",
-    "name": "FS90R",
-    "manufacturer": "Feetech",
-    "controlType": "continuous",
-    "voltage": { "min": 4.8, "max": 6.0, "nominal": 6.0 },
-    "torqueKgcm": 1.3,
-    "stallCurrentA": 0.7,
-    "noLoadCurrentA": 0.1,
-    "speedSecPer60deg": 0.091,
-    "weightG": 9,
-    "dimensions": { "x": 22.6, "y": 12.4, "z": 22.5 },
-    "horn": {
-      "type": "spline",
-      "shaftDiameter": 4.8,
-      "teeth": 21
-    },
-    "mountingHoles": [
-      { "x": -14, "y": 0, "z": 0, "diameter": 2.0 },
-      { "x": 14, "y": 0, "z": 0, "diameter": 2.0 }
-    ],
-    "shaft": { "x": 0, "y": 0, "z": 0 },
-    "notes": "連続回転サーボ。位置制御不可・速度制御のみ。無負荷 ~110rpm。FT90B 互換筐体の暫定寸法"
   }
 }
