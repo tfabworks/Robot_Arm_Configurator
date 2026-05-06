@@ -33,6 +33,10 @@ export interface EndEffector {
   mountPosition: 'tip';
   orientation: 'down' | 'up' | 'forward';
   fitTolerance?: number;
+  // Tilt threshold in degrees from gravity-down. When the magnet face tilts
+  // beyond this angle, a passive gravity-actuated separator is assumed to
+  // slide between the magnet and the held clip, releasing it.
+  releaseAngleDeg?: number;
 }
 
 export interface BoxLink {

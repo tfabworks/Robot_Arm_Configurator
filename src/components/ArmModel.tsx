@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import * as THREE from 'three';
 import type { Link, Joint, ArmTemplate, MagnetDB, Magnet } from '../types/arm';
 import { useArmStore } from '../store/armStore';
+import { computeReleaseStatus } from '../lib/kinematics';
 
 function LinkMesh({ link }: { link: Link }) {
   if (link.shape === 'cylinder') {
@@ -22,19 +23,40 @@ function LinkMesh({ link }: { link: Link }) {
   );
 }
 
-function MagnetMarker({ link, magnet }: { link: Link; magnet: Magnet }) {
+function MagnetMarker({
+  link,
+  magnet,
+  released,
+}: {
+  link: Link;
+  magnet: Magnet;
+  released: boolean;
+}) {
   if (link.shape !== 'box') return null;
   if (!link.endEffector || link.endEffector.type !== 'magnet') return null;
   const { length, thickness } = link.dimensions;
   const { diameterMm, thicknessMm } = magnet;
+  const baseZ = -(thickness / 2 + thicknessMm / 2);
+  const color = released ? '#6b7280' : '#dc2626';
   return (
-    <mesh
-      position={[length, 0, -(thickness / 2 + thicknessMm / 2)]}
-      rotation={[Math.PI / 2, 0, 0]}
-    >
-      <cylinderGeometry args={[diameterMm / 2, diameterMm / 2, thicknessMm, 24]} />
-      <meshStandardMaterial color="#dc2626" metalness={0.6} roughness={0.3} />
-    </mesh>
+    <group>
+      <mesh
+        position={[length, 0, baseZ]}
+        rotation={[Math.PI / 2, 0, 0]}
+      >
+        <cylinderGeometry args={[diameterMm / 2, diameterMm / 2, thicknessMm, 24]} />
+        <meshStandardMaterial color={color} metalness={0.6} roughness={0.3} />
+      </mesh>
+      {!released && (
+        <mesh
+          position={[length, 0, baseZ - thicknessMm / 2 - 0.6]}
+          rotation={[Math.PI / 2, 0, 0]}
+        >
+          <boxGeometry args={[14, 1.2, 6]} />
+          <meshStandardMaterial color="#a1a1aa" metalness={0.4} roughness={0.5} />
+        </mesh>
+      )}
+    </group>
   );
 }
 
@@ -69,6 +91,7 @@ function buildLinkTree(
   jointAngles: Record<string, number>,
   magnets: MagnetDB,
   linkId: string,
+  magnetReleased: boolean,
 ): React.ReactNode {
   const link = template.links.find((l) => l.id === linkId);
   if (!link) return null;
@@ -77,10 +100,12 @@ function buildLinkTree(
   return (
     <group key={linkId}>
       <LinkMesh link={link} />
-      {magnet && <MagnetMarker link={link} magnet={magnet} />}
+      {magnet && (
+        <MagnetMarker link={link} magnet={magnet} released={magnetReleased} />
+      )}
       {childJoints.map((j) => (
         <JointGroup key={j.id} joint={j} angleDeg={jointAngles[j.id] ?? 0}>
-          {buildLinkTree(template, jointAngles, magnets, j.child)}
+          {buildLinkTree(template, jointAngles, magnets, j.child, magnetReleased)}
         </JointGroup>
       ))}
     </group>
@@ -91,5 +116,9 @@ export function ArmModel() {
   const template = useArmStore((s) => s.template);
   const angles = useArmStore((s) => s.jointAngles);
   const magnets = useArmStore((s) => s.magnets);
-  return <>{buildLinkTree(template, angles, magnets, template.rootLink)}</>;
+  const release = computeReleaseStatus(template, angles);
+  const released = release?.released ?? false;
+  return (
+    <>{buildLinkTree(template, angles, magnets, template.rootLink, released)}</>
+  );
 }

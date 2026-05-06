@@ -7,6 +7,7 @@ import type {
   Servo,
   ServoDB,
 } from '../types/arm';
+import { gravityAxisFactor } from './kinematics';
 
 // PLA solid density. Real prints with 15-30% infill weigh less, so this
 // over-estimates mass — which biases torque checks toward safety.
@@ -134,7 +135,10 @@ export const computeValidation = (
     const distalMomentAboutJoint = distalMomentAboutChildTip + distalMass * childLen;
     const linkMomentAboutJoint = childMass * (childLen / 2);
     const totalMomentAboutJoint = distalMomentAboutJoint + linkMomentAboutJoint;
-    const requiredKgcm = totalMomentAboutJoint / 10000;
+    // Project the gravity-induced moment onto the joint's rotation axis. A
+    // turret (axis parallel to gravity) sees no static-load torque.
+    const axisFactor = gravityAxisFactor(joint.axis);
+    const requiredKgcm = (totalMomentAboutJoint / 10000) * axisFactor;
 
     const servo = resolveServoForJoint(joint, template, servos);
     const maxKgcm = servo?.torqueKgcm ?? 0;

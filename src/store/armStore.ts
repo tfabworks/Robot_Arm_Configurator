@@ -98,7 +98,10 @@ export const useArmStore = create<ArmState>()(
     }),
     {
       name: 'robot-arm-cad',
-      version: 1,
+      // Bumped to 2 when shoulder became a continuous Z-axis turret driven by
+      // FS90R. Old persisted templates carry the FT90B revolute shoulder and
+      // would render a broken arm — version mismatch drops them.
+      version: 2,
       storage: createJSONStorage(() => localStorage),
       // Only the user-editable design state is persisted. Static DBs come
       // from imported JSON every load so updates ship via deploys.

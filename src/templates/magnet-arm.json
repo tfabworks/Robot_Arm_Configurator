@@ -1,8 +1,8 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "id": "magnet-arm-2dof",
   "name": "磁石グリッパー2軸アーム",
-  "description": "FT90B サーボ2個 + ネオジム磁石でクリップを拾う卓上アーム（Phase 1 既定テンプレート）",
+  "description": "ターレット(FS90R) + 肘リフト(FT90B) + ネオジム磁石でクリップを拾う卓上アーム。Phase 1 既定テンプレート",
   "rootLink": "base",
   "units": {
     "length": "mm",
@@ -51,21 +51,21 @@
         "ref": "magnet-db:neodymium-d8x3-n35",
         "mountPosition": "tip",
         "orientation": "down",
-        "fitTolerance": -0.1
+        "fitTolerance": -0.1,
+        "releaseAngleDeg": 60
       }
     }
   ],
   "joints": [
     {
       "id": "shoulder",
-      "type": "revolute",
+      "type": "continuous",
       "parent": "base",
       "child": "upper_arm",
       "origin": { "xyz": [0, 0, 50], "rpy": [0, 0, 0] },
-      "axis": [0, 1, 0],
-      "limit": { "lower": -90, "upper": 90 },
+      "axis": [0, 0, 1],
       "home": 0,
-      "servo": "FT90B"
+      "servo": "FS90R"
     },
     {
       "id": "elbow",
@@ -80,7 +80,8 @@
     }
   ],
   "servos": {
-    "FT90B": { "ref": "servo-db:FT90B" }
+    "FT90B": { "ref": "servo-db:FT90B" },
+    "FS90R": { "ref": "servo-db:FS90R" }
   },
   "magnetOptions": [
     "magnet-db:neodymium-d6x2-n35",
