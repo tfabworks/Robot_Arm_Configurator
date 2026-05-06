@@ -1,4 +1,5 @@
 import { ArmViewer } from './components/ArmViewer';
+import { JointSliders } from './components/JointSliders';
 import { useArmStore } from './store/armStore';
 import './App.css';
 
@@ -10,10 +11,17 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>{template.name}</h1>
-        <span className="muted">{template.id} / v{template.version}</span>
+        <span className="muted">
+          {template.id} / v{template.version}
+        </span>
       </header>
-      <div className="viewer-wrap">
-        <ArmViewer />
+      <div className="app-main">
+        <aside className="sidebar">
+          <JointSliders />
+        </aside>
+        <div className="viewer-wrap">
+          <ArmViewer />
+        </div>
       </div>
       <footer className="app-footer">
         {template.joints.map((j) => (
