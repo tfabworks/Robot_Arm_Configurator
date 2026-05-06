@@ -40,3 +40,8 @@ Thumbs.db
 
 # Claude Code (local-only settings)
 .claude/settings.local.json
+
+# Reference materials (CAD exports, screenshots) — kept locally for analysis
+*.step
+*.stp
+スクリーンショット*.png
