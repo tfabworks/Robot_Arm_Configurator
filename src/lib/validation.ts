@@ -69,6 +69,11 @@ export interface JointTorqueReport {
   level: 'ok' | 'warn' | 'over';
 }
 
+export interface ManufacturingIssue {
+  linkId: string;
+  message: string;
+}
+
 export interface ValidationReport {
   joints: JointTorqueReport[];
   voltage: {
@@ -79,6 +84,7 @@ export interface ValidationReport {
   } | null;
   totalMassG: number;
   payloadG: number;
+  manufacturing: ManufacturingIssue[];
 }
 
 // Walk inward from tip, accumulating torque about each joint at the
@@ -177,7 +183,85 @@ export const computeValidation = (
     voltage,
     totalMassG,
     payloadG: PAYLOAD_G,
+    manufacturing: collectManufacturingIssues(template, servos, magnets),
   };
+};
+
+const collectManufacturingIssues = (
+  template: ArmTemplate,
+  servos: ServoDB,
+  magnets: MagnetDB,
+): ManufacturingIssue[] => {
+  const issues: ManufacturingIssue[] = [];
+  const c = template.manufacturing?.servoHoleClearanceMm ?? 0.2;
+
+  for (const link of template.links) {
+    for (const joint of template.joints) {
+      if (joint.parent !== link.id) continue;
+      const slot = joint.servo ? template.servos[joint.servo] : undefined;
+      if (!slot) continue;
+      const id = slot.ref.replace(/^servo-db:/, '');
+      const servo = servos[id];
+      if (!servo) continue;
+
+      const axis = joint.axis;
+      const isZ = Math.abs(axis[2]) > 0.99;
+      const isY = Math.abs(axis[1]) > 0.99;
+      const reqAcrossA = servo.dimensions.x + 2 * c;
+      const reqAcrossB = servo.dimensions.y + 2 * c;
+      const reqDepth = servo.dimensions.z + 2 * c + 1;
+
+      if (link.shape === 'cylinder' && isZ) {
+        if (link.dimensions.diameter < reqAcrossA) {
+          issues.push({
+            linkId: link.id,
+            message: `直径 ${link.dimensions.diameter}mm < 必要 ${reqAcrossA.toFixed(1)}mm（${servo.id} 取付幅）`,
+          });
+        }
+        if (link.dimensions.length < reqDepth) {
+          issues.push({
+            linkId: link.id,
+            message: `長さ ${link.dimensions.length}mm < 必要 ${reqDepth.toFixed(1)}mm（${servo.id} 本体深さ + ホーン）`,
+          });
+        }
+      } else if (link.shape === 'box' && isY) {
+        if (link.dimensions.length < reqAcrossA) {
+          issues.push({
+            linkId: link.id,
+            message: `長さ ${link.dimensions.length}mm < 必要 ${reqAcrossA.toFixed(1)}mm（${servo.id} 取付幅）`,
+          });
+        }
+        if (link.dimensions.thickness < reqAcrossB) {
+          issues.push({
+            linkId: link.id,
+            message: `厚さ ${link.dimensions.thickness}mm < 必要 ${reqAcrossB.toFixed(1)}mm（${servo.id} 本体厚）`,
+          });
+        }
+        if (link.dimensions.width < reqDepth) {
+          issues.push({
+            linkId: link.id,
+            message: `幅 ${link.dimensions.width}mm < 必要 ${reqDepth.toFixed(1)}mm（${servo.id} 本体深さ）`,
+          });
+        }
+      }
+    }
+
+    if (link.endEffector?.type === 'magnet' && link.shape === 'box') {
+      const id = link.endEffector.ref.replace(/^magnet-db:/, '');
+      const magnet = magnets[id];
+      if (magnet) {
+        const wallMin = template.manufacturing?.wallMinMm ?? 1.5;
+        const reqThickness = magnet.thicknessMm + wallMin;
+        if (link.dimensions.thickness < reqThickness) {
+          issues.push({
+            linkId: link.id,
+            message: `厚さ ${link.dimensions.thickness}mm < 必要 ${reqThickness.toFixed(1)}mm（磁石ポケット ${magnet.thicknessMm}mm + 上壁 ${wallMin}mm）`,
+          });
+        }
+      }
+    }
+  }
+  return issues;
 };
 
 export const SAFETY_FRACTION_PCT = SAFETY_FRACTION * 100;

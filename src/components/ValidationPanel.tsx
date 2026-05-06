@@ -55,6 +55,16 @@ export function ValidationPanel() {
             </div>
           )}
         </div>
+        {report.manufacturing.length > 0 && (
+          <div className="mfg-issues">
+            <div className="mfg-head">取付け制約:</div>
+            {report.manufacturing.map((iss, i) => (
+              <div key={i} className="mfg-issue">
+                <span className="mfg-link">{iss.linkId}</span>: {iss.message}
+              </div>
+            ))}
+          </div>
+        )}
         {report.joints.map((r) => {
           const pct = Math.min(100, r.utilization * 100);
           return (

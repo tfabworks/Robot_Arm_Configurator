@@ -5,6 +5,11 @@ import { VitePWA } from 'vite-plugin-pwa'
 // https://vite.dev/config/
 export default defineConfig({
   base: '/Robot_Arm_Configurator/',
+  optimizeDeps: {
+    // manifold-3d ships an ES module that loads its WASM via import.meta.url.
+    // Letting Vite pre-bundle it breaks that resolution in dev.
+    exclude: ['manifold-3d'],
+  },
   plugins: [
     react(),
     VitePWA({
@@ -32,7 +37,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,ico,png,woff2,json}'],
+        globPatterns: ['**/*.{js,css,html,svg,ico,png,woff2,json,wasm}'],
         navigateFallback: '/Robot_Arm_Configurator/index.html',
         navigateFallbackDenylist: [/^\/api\//],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,

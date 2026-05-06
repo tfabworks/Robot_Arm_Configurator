@@ -273,3 +273,29 @@
 .over-text {
   color: #ef4444;
 }
+
+.mfg-issues {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  background: #2a1f0e;
+  border: 1px solid #4a3520;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.mfg-head {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.mfg-issue {
+  color: #fbbf24;
+  word-break: break-word;
+}
+
+.mfg-link {
+  color: #fde68a;
+  font-weight: 500;
+}
