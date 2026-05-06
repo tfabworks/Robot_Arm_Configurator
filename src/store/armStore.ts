@@ -17,6 +17,7 @@ interface ArmState {
   resetToHome: () => void;
   setLinkDimension: (linkId: string, key: DimensionKey, value: number) => void;
   resetTemplate: () => void;
+  loadTemplate: (template: ArmTemplate) => void;
 }
 
 const cloneTemplate = (t: ArmTemplate): ArmTemplate =>
@@ -84,6 +85,11 @@ export const useArmStore = create<ArmState>((set) => ({
   resetTemplate: () =>
     set(() => {
       const next = cloneTemplate(baseTemplate);
+      return { template: next, jointAngles: initialAngles(next) };
+    }),
+  loadTemplate: (template) =>
+    set(() => {
+      const next = cloneTemplate(template);
       return { template: next, jointAngles: initialAngles(next) };
     }),
 }));

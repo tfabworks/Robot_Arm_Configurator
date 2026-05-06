@@ -138,6 +138,16 @@
   gap: 8px;
 }
 
+.import-error {
+  color: #ef4444;
+  font-size: 11px;
+  background: #2a1414;
+  border: 1px solid #4a1f1f;
+  border-radius: 4px;
+  padding: 6px 8px;
+  word-break: break-word;
+}
+
 .slider-row {
   display: flex;
   flex-direction: column;
