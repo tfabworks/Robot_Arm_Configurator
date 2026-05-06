@@ -1,6 +1,7 @@
 import { ArmViewer } from './components/ArmViewer';
 import { DimensionSliders } from './components/DimensionSliders';
 import { JointSliders } from './components/JointSliders';
+import { ValidationPanel } from './components/ValidationPanel';
 import { useArmStore } from './store/armStore';
 import './App.css';
 
@@ -20,6 +21,7 @@ function App() {
         <aside className="sidebar">
           <JointSliders />
           <DimensionSliders />
+          <ValidationPanel />
         </aside>
         <div className="viewer-wrap">
           <ArmViewer />
