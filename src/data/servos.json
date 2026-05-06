@@ -6,22 +6,22 @@
     "controlType": "positional",
     "voltage": { "min": 4.8, "max": 6.0, "nominal": 6.0 },
     "torqueKgcm": 1.5,
-    "stallCurrentA": 0.6,
+    "stallCurrentA": 0.7,
     "noLoadCurrentA": 0.1,
     "speedSecPer60deg": 0.10,
     "weightG": 9,
-    "dimensions": { "x": 22.6, "y": 12.4, "z": 22.5 },
+    "dimensions": { "x": 22.5, "y": 12.1, "z": 22.4 },
     "horn": {
       "type": "spline",
-      "shaftDiameter": 4.8,
+      "shaftDiameter": 4.86,
       "teeth": 21
     },
     "mountingHoles": [
-      { "x": -14, "y": 0, "z": 0, "diameter": 2.0 },
-      { "x": 14, "y": 0, "z": 0, "diameter": 2.0 }
+      { "x": -13.85, "y": 0, "z": 0, "diameter": 2.2 },
+      { "x": 13.85, "y": 0, "z": 0, "diameter": 2.2 }
     ],
     "shaft": { "x": 0, "y": 0, "z": 0 },
     "operatingRangeDeg": { "lower": -90, "upper": 90 },
-    "notes": "寸法・取付穴位置は実機計測で要再確認（暫定値）"
+    "notes": "FEETECH FT90B-C001 データシート (akizukidenshi.com/goodsaffix/ft90b.pdf, 2026-05) に基づく。本体 22.5×12.1×22.4mm。スプライン軸 ø4.86 / 21 歯。取付穴ピッチ 27.7mm / ø2.2。動作温度 -20〜70°C。電気特性は 4.8V 規格値（6V 公称ではトルク ~1.5kg·cm、速度 ~0.10 sec/60°）。なお実機では軸が本体長手方向の中心から ~2.55mm オフセット（一端 8.7mm/他端 13.8mm）しているが、現 CSG モデルは軸対称キャビティ前提のため、シビアにフィットさせる場合は CSG 側に shaftOffset 対応が必要"
   }
 }
