@@ -1,5 +1,5 @@
 {
-  "version": "1.3",
+  "version": "1.4",
   "id": "magnet-arm-2dof",
   "name": "磁石グリッパー2軸アーム",
   "description": "FT90B 2 個（ベース旋回 + 肘リフト）+ ネオジム磁石でクリップを拾う卓上アーム（Phase 1 既定テンプレート）",
@@ -32,8 +32,8 @@
       "color": "#3b82f6",
       "constraints": {
         "length": { "min": 50, "max": 100 },
-        "width": { "min": 14, "max": 22 },
-        "thickness": { "min": 10, "max": 15 }
+        "width": { "min": 14, "max": 30 },
+        "thickness": { "min": 10, "max": 18 }
       }
     },
     {

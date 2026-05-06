@@ -98,10 +98,12 @@ export const useArmStore = create<ArmState>()(
     }),
     {
       name: 'robot-arm-cad',
-      // Bumped to 4 when the shoulder switched to a Z-axis turret driven
-      // by FT90B (previous v3 used a Y-axis lift shoulder). Old persisted
-      // axes don't match the current template; version mismatch drops them.
-      version: 4,
+      // Bumped to 5 when upper_arm constraints were widened (width max
+      // 22→30, thickness max 15→18) so users could actually slide far
+      // enough to fit the FT90B body along the elbow shaft. v4 templates
+      // would persist the old narrow caps and the warning would never
+      // clear; the version bump forces a fresh template on next load.
+      version: 5,
       storage: createJSONStorage(() => localStorage),
       // Only the user-editable design state is persisted. Static DBs come
       // from imported JSON every load so updates ship via deploys.
