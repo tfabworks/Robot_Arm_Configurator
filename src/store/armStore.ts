@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { ArmTemplate, ServoDB, MagnetDB, Link } from '../types/arm';
 import magnetArmTemplate from '../templates/magnet-arm.json';
 import servosData from '../data/servos.json';
@@ -52,44 +53,59 @@ const syncJointOriginsFromParent = (template: ArmTemplate, parentId: string) => 
   }
 };
 
-export const useArmStore = create<ArmState>((set) => ({
-  template: cloneTemplate(baseTemplate),
-  servos: servosData as unknown as ServoDB,
-  magnets: magnetsData as unknown as MagnetDB,
-  jointAngles: initialAngles(baseTemplate),
-  setJointAngle: (jointId, angleDeg) =>
-    set((state) => ({
-      jointAngles: { ...state.jointAngles, [jointId]: angleDeg },
-    })),
-  resetToHome: () =>
-    set((state) => ({ jointAngles: initialAngles(state.template) })),
-  setLinkDimension: (linkId, key, value) =>
-    set((state) => {
-      const next = cloneTemplate(state.template);
-      const link = next.links.find((l) => l.id === linkId);
-      if (!link) return {};
-      if (link.shape === 'box') {
-        if (key === 'length' || key === 'width' || key === 'thickness') {
-          link.dimensions[key] = value;
-        }
-      } else {
-        if (key === 'diameter' || key === 'length') {
-          link.dimensions[key] = value;
-        }
-      }
-      if (key === 'length') {
-        syncJointOriginsFromParent(next, linkId);
-      }
-      return { template: next };
+export const useArmStore = create<ArmState>()(
+  persist(
+    (set) => ({
+      template: cloneTemplate(baseTemplate),
+      servos: servosData as unknown as ServoDB,
+      magnets: magnetsData as unknown as MagnetDB,
+      jointAngles: initialAngles(baseTemplate),
+      setJointAngle: (jointId, angleDeg) =>
+        set((state) => ({
+          jointAngles: { ...state.jointAngles, [jointId]: angleDeg },
+        })),
+      resetToHome: () =>
+        set((state) => ({ jointAngles: initialAngles(state.template) })),
+      setLinkDimension: (linkId, key, value) =>
+        set((state) => {
+          const next = cloneTemplate(state.template);
+          const link = next.links.find((l) => l.id === linkId);
+          if (!link) return {};
+          if (link.shape === 'box') {
+            if (key === 'length' || key === 'width' || key === 'thickness') {
+              link.dimensions[key] = value;
+            }
+          } else {
+            if (key === 'diameter' || key === 'length') {
+              link.dimensions[key] = value;
+            }
+          }
+          if (key === 'length') {
+            syncJointOriginsFromParent(next, linkId);
+          }
+          return { template: next };
+        }),
+      resetTemplate: () =>
+        set(() => {
+          const next = cloneTemplate(baseTemplate);
+          return { template: next, jointAngles: initialAngles(next) };
+        }),
+      loadTemplate: (template) =>
+        set(() => {
+          const next = cloneTemplate(template);
+          return { template: next, jointAngles: initialAngles(next) };
+        }),
     }),
-  resetTemplate: () =>
-    set(() => {
-      const next = cloneTemplate(baseTemplate);
-      return { template: next, jointAngles: initialAngles(next) };
-    }),
-  loadTemplate: (template) =>
-    set(() => {
-      const next = cloneTemplate(template);
-      return { template: next, jointAngles: initialAngles(next) };
-    }),
-}));
+    {
+      name: 'robot-arm-cad',
+      version: 1,
+      storage: createJSONStorage(() => localStorage),
+      // Only the user-editable design state is persisted. Static DBs come
+      // from imported JSON every load so updates ship via deploys.
+      partialize: (state) => ({
+        template: state.template,
+        jointAngles: state.jointAngles,
+      }),
+    },
+  ),
+);
