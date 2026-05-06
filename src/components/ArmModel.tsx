@@ -1,8 +1,25 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
-import type { Link, Joint, ArmTemplate, MagnetDB, Magnet } from '../types/arm';
+import type {
+  Link,
+  Joint,
+  ArmTemplate,
+  MagnetDB,
+  Magnet,
+  Servo,
+  ServoDB,
+} from '../types/arm';
 import { useArmStore } from '../store/armStore';
-import { computeReleaseStatus } from '../lib/kinematics';
+import {
+  computeReleaseStatus,
+  eulerForAxisRad,
+  magnetCenterInLink,
+} from '../lib/kinematics';
+import { checkServoFit, checkMagnetFit } from '../lib/validation';
+
+const FIT_COLOR = '#22c55e';
+const OVERFLOW_COLOR = '#ef4444';
+const OVERLAY_OPACITY = 0.45;
 
 function LinkMesh({ link }: { link: Link }) {
   if (link.shape === 'cylinder') {
@@ -32,24 +49,27 @@ function MagnetMarker({
   magnet: Magnet;
   released: boolean;
 }) {
+  const center = magnetCenterInLink(link, magnet);
+  if (!center) return null;
   if (link.shape !== 'box') return null;
-  if (!link.endEffector || link.endEffector.type !== 'magnet') return null;
-  const { length, thickness } = link.dimensions;
+  const [cx, cy, cz] = center;
+  const t = link.dimensions.thickness;
   const { diameterMm, thicknessMm } = magnet;
-  const baseZ = -(thickness / 2 + thicknessMm / 2);
   const color = released ? '#6b7280' : '#dc2626';
   return (
     <group>
       <mesh
-        position={[length, 0, baseZ]}
+        position={[cx, cy, cz]}
         rotation={[Math.PI / 2, 0, 0]}
       >
-        <cylinderGeometry args={[diameterMm / 2, diameterMm / 2, thicknessMm, 24]} />
+        <cylinderGeometry
+          args={[diameterMm / 2, diameterMm / 2, thicknessMm, 24]}
+        />
         <meshStandardMaterial color={color} metalness={0.6} roughness={0.3} />
       </mesh>
       {!released && (
         <mesh
-          position={[length, 0, baseZ - thicknessMm / 2 - 0.6]}
+          position={[cx, cy, -t / 2 - 0.6]}
           rotation={[Math.PI / 2, 0, 0]}
         >
           <boxGeometry args={[14, 1.2, 6]} />
@@ -57,6 +77,75 @@ function MagnetMarker({
         </mesh>
       )}
     </group>
+  );
+}
+
+// Translucent box marking where the servo body would sit relative to its
+// parent link. The body is positioned in the parent's frame at the joint
+// origin and oriented so the box's local +Z runs along the joint axis. The
+// material is depth-test-disabled so the body stays visible even when
+// inside the link mesh — a green ghost when it fits, red when it pokes
+// past the link envelope.
+function ServoBodyOverlay({
+  servo,
+  joint,
+  fits,
+}: {
+  servo: Servo;
+  joint: Joint;
+  fits: boolean;
+}) {
+  const eu = eulerForAxisRad(joint.axis);
+  const color = fits ? FIT_COLOR : OVERFLOW_COLOR;
+  const { x, y, z } = servo.dimensions;
+  return (
+    <group position={joint.origin.xyz} rotation={joint.origin.rpy as [number, number, number]}>
+      <group rotation={eu}>
+        <mesh position={[0, 0, -z / 2]} renderOrder={2}>
+          <boxGeometry args={[x, y, z]} />
+          <meshStandardMaterial
+            color={color}
+            transparent
+            opacity={OVERLAY_OPACITY}
+            depthTest={false}
+          />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+// Translucent cylinder showing the magnet pocket. Depth-test stays enabled
+// here so the overlay only becomes visible when it pokes past the link
+// envelope, leaving the actual magnet (and its hold/release color) free of
+// occlusion when the pocket fits cleanly inside the link.
+function MagnetPocketOverlay({
+  link,
+  magnet,
+  fits,
+}: {
+  link: Link;
+  magnet: Magnet;
+  fits: boolean;
+}) {
+  const center = magnetCenterInLink(link, magnet);
+  if (!center) return null;
+  if (fits) return null;
+  const [cx, cy, cz] = center;
+  return (
+    <mesh
+      position={[cx, cy, cz]}
+      rotation={[Math.PI / 2, 0, 0]}
+    >
+      <cylinderGeometry
+        args={[magnet.diameterMm / 2, magnet.diameterMm / 2, magnet.thicknessMm + 0.4, 32]}
+      />
+      <meshStandardMaterial
+        color={OVERFLOW_COLOR}
+        transparent
+        opacity={OVERLAY_OPACITY}
+      />
+    </mesh>
   );
 }
 
@@ -86,9 +175,21 @@ function resolveMagnet(link: Link, magnets: MagnetDB): Magnet | null {
   return magnets[id] ?? null;
 }
 
+function resolveServo(
+  joint: Joint,
+  template: ArmTemplate,
+  servos: ServoDB,
+): Servo | null {
+  const slot = joint.servo ? template.servos[joint.servo] : undefined;
+  if (!slot) return null;
+  const id = slot.ref.replace(/^servo-db:/, '');
+  return servos[id] ?? null;
+}
+
 function buildLinkTree(
   template: ArmTemplate,
   jointAngles: Record<string, number>,
+  servos: ServoDB,
   magnets: MagnetDB,
   linkId: string,
   magnetReleased: boolean,
@@ -103,9 +204,28 @@ function buildLinkTree(
       {magnet && (
         <MagnetMarker link={link} magnet={magnet} released={magnetReleased} />
       )}
+      {magnet && (
+        <MagnetPocketOverlay
+          link={link}
+          magnet={magnet}
+          fits={checkMagnetFit(magnet, link)}
+        />
+      )}
+      {childJoints.map((j) => {
+        const servo = resolveServo(j, template, servos);
+        if (!servo) return null;
+        return (
+          <ServoBodyOverlay
+            key={`servo-${j.id}`}
+            servo={servo}
+            joint={j}
+            fits={checkServoFit(servo, j, link)}
+          />
+        );
+      })}
       {childJoints.map((j) => (
         <JointGroup key={j.id} joint={j} angleDeg={jointAngles[j.id] ?? 0}>
-          {buildLinkTree(template, jointAngles, magnets, j.child, magnetReleased)}
+          {buildLinkTree(template, jointAngles, servos, magnets, j.child, magnetReleased)}
         </JointGroup>
       ))}
     </group>
@@ -115,10 +235,20 @@ function buildLinkTree(
 export function ArmModel() {
   const template = useArmStore((s) => s.template);
   const angles = useArmStore((s) => s.jointAngles);
+  const servos = useArmStore((s) => s.servos);
   const magnets = useArmStore((s) => s.magnets);
   const release = computeReleaseStatus(template, angles);
   const released = release?.released ?? false;
   return (
-    <>{buildLinkTree(template, angles, magnets, template.rootLink, released)}</>
+    <>
+      {buildLinkTree(
+        template,
+        angles,
+        servos,
+        magnets,
+        template.rootLink,
+        released,
+      )}
+    </>
   );
 }

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { ArmTemplate, Joint, Link } from '../types/arm';
+import type { ArmTemplate, Joint, Link, Magnet } from '../types/arm';
 
 // Walk root → leaf along parent/child links to find the joint chain.
 const chainTo = (template: ArmTemplate, leafLinkId: string): Joint[] => {
@@ -89,4 +89,39 @@ export const gravityAxisFactor = (axis: [number, number, number]): number => {
   const horiz = Math.hypot(axis[0], axis[1]);
   const total = Math.hypot(axis[0], axis[1], axis[2]);
   return total > 0 ? horiz / total : 0;
+};
+
+// Center of the magnet pocket / visualization within a box link's local
+// frame. Positioned just back from the tip so the pocket fits fully inside
+// the link in X, with the magnet's bottom face flush with the link's
+// bottom face. Returns null if the link is not a magnet-bearing box.
+export const magnetCenterInLink = (
+  link: Link,
+  magnet: Magnet,
+): [number, number, number] | null => {
+  if (link.shape !== 'box') return null;
+  if (!link.endEffector || link.endEffector.type !== 'magnet') return null;
+  const tip = link.dimensions.length;
+  const t = link.dimensions.thickness;
+  const r = magnet.diameterMm / 2;
+  // Inset by radius + 1mm from the tip; clamp so it stays at least r+1 from
+  // the origin in case the user shrinks the link below the magnet diameter.
+  const x = Math.max(r + 1, tip - r - 1);
+  return [x, 0, -t / 2 + magnet.thicknessMm / 2];
+};
+
+// Map an axis-aligned joint axis to Three.js Euler angles (radians, XYZ
+// order) such that the servo's local +Z (shaft) lands on that axis.
+export const eulerForAxisRad = (
+  axis: readonly [number, number, number],
+): [number, number, number] => {
+  const [x, y, z] = axis;
+  const H = Math.PI / 2;
+  if (z > 0.99) return [0, 0, 0];
+  if (z < -0.99) return [Math.PI, 0, 0];
+  if (y > 0.99) return [-H, 0, 0];
+  if (y < -0.99) return [H, 0, 0];
+  if (x > 0.99) return [0, H, 0];
+  if (x < -0.99) return [0, -H, 0];
+  return [0, 0, 0];
 };

@@ -8,6 +8,7 @@ import type {
   Servo,
   ServoDB,
 } from '../types/arm';
+import { magnetCenterInLink } from './kinematics';
 
 type ManifoldNS = Awaited<ReturnType<typeof Module>>;
 type ManifoldClass = ManifoldNS['Manifold'];
@@ -128,18 +129,20 @@ const buildMagnetPocket = (
   const r = magnet.diameterMm / 2 + clearanceMm;
   if (r <= 0.1) return null;
   const h = magnet.thicknessMm + MAGNET_POCKET_DEPTH_PAD_MM;
-  const tip = link.dimensions.length;
+  const center = magnetCenterInLink(link, magnet);
+  if (!center) return null;
+  const [cx, , cz] = center;
   const t = link.dimensions.thickness;
   let pocket = M.cylinder(h, r, undefined, 32, false);
   switch (link.endEffector.orientation) {
     case 'down':
-      pocket = pocket.translate([tip, 0, -t / 2]);
+      pocket = pocket.translate([cx, 0, -t / 2]);
       break;
     case 'up':
-      pocket = pocket.translate([tip, 0, t / 2 - h]);
+      pocket = pocket.translate([cx, 0, t / 2 - h]);
       break;
     case 'forward':
-      pocket = pocket.rotate([0, 90, 0]).translate([tip - h, 0, 0]);
+      pocket = pocket.rotate([0, 90, 0]).translate([cx - h, 0, cz]);
       break;
   }
   return pocket;

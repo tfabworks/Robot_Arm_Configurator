@@ -9,6 +9,53 @@ import type {
 } from '../types/arm';
 import { gravityAxisFactor } from './kinematics';
 
+const SERVO_CLEARANCE_DEFAULT = 0.2;
+const WALL_MIN_DEFAULT = 1.5;
+
+// True iff the given servo's body cavity (sized + clearance) fits within the
+// parent link's envelope at the joint's location and axis. Phase 1 covers
+// only the two axis cases used by our default template (turret in cylinder,
+// elbow in box); other cases conservatively return true so the visualizer
+// does not flash a false warning while we extend coverage.
+export const checkServoFit = (
+  servo: Servo,
+  joint: Joint,
+  link: Link,
+  servoClearance = SERVO_CLEARANCE_DEFAULT,
+): boolean => {
+  const reqA = servo.dimensions.x + 2 * servoClearance;
+  const reqB = servo.dimensions.y + 2 * servoClearance;
+  const reqC = servo.dimensions.z + 2 * servoClearance;
+  const isZ = Math.abs(joint.axis[2]) > 0.99;
+  const isY = Math.abs(joint.axis[1]) > 0.99;
+  if (link.shape === 'cylinder' && isZ) {
+    return (
+      link.dimensions.diameter >= reqA && link.dimensions.length >= reqC
+    );
+  }
+  if (link.shape === 'box' && isY) {
+    return (
+      link.dimensions.length >= reqA &&
+      link.dimensions.thickness >= reqB &&
+      link.dimensions.width >= reqC
+    );
+  }
+  return true;
+};
+
+export const checkMagnetFit = (
+  magnet: Magnet,
+  link: Link,
+  wallMin = WALL_MIN_DEFAULT,
+): boolean => {
+  if (link.shape !== 'box') return true;
+  if (!link.endEffector || link.endEffector.type !== 'magnet') return true;
+  return (
+    link.dimensions.thickness >= magnet.thicknessMm + wallMin &&
+    link.dimensions.length >= magnet.diameterMm
+  );
+};
+
 // PLA solid density. Real prints with 15-30% infill weigh less, so this
 // over-estimates mass — which biases torque checks toward safety.
 const PLA_DENSITY_G_PER_MM3 = 0.00124;
